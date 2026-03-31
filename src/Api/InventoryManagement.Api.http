@@ -1,0 +1,60 @@
+@InventoryManagement.Api_HostAddress = http://localhost:5153
+@token = YOUR_TOKEN_HERE
+
+### Auth: Login
+POST {{InventoryManagement.Api_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "Password123!"
+}
+
+### Products: Get All
+GET {{InventoryManagement.Api_HostAddress}}/api/products?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### Products: Create
+POST {{InventoryManagement.Api_HostAddress}}/api/products
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sku": "PROD-001",
+  "productName": "Laptop",
+  "description": "High-end gaming laptop",
+  "categoryId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "unitOfMeasure": "Unit",
+  "cost": 1000,
+  "listPrice": 1500
+}
+
+### Products: Get By ID
+GET {{InventoryManagement.Api_HostAddress}}/api/products/3fa85f64-5717-4562-b3fc-2c963f66afa6
+Authorization: Bearer {{token}}
+
+### Stock: Get All
+GET {{InventoryManagement.Api_HostAddress}}/api/stock
+Authorization: Bearer {{token}}
+
+### Stock: Get By Product
+GET {{InventoryManagement.Api_HostAddress}}/api/stock/3fa85f64-5717-4562-b3fc-2c963f66afa6
+Authorization: Bearer {{token}}
+
+### Stock: Transaction
+POST {{InventoryManagement.Api_HostAddress}}/api/stock/transaction
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "productId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "warehouseId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "quantity": 10,
+  "transactionType": 0,
+  "referenceNumber": "TR-001",
+  "transactionDate": "2024-03-16T10:00:00Z"
+}
+
+### Inventory: Valuation
+GET {{InventoryManagement.Api_HostAddress}}/api/inventory/valuation?method=FIFO
+Authorization: Bearer {{token}}

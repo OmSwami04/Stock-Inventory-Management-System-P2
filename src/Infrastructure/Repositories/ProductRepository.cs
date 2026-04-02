@@ -11,6 +11,15 @@ public class ProductRepository : GenericRepository<Product>, IProductRepository
     {
     }
 
+    public override async Task AddAsync(Product entity)
+    {
+        if (await SkuExistsAsync(entity.SKU))
+        {
+            throw new InventoryManagement.Shared.Exceptions.BadRequestException($"Product with SKU '{entity.SKU}' already exists.");
+        }
+        await _dbSet.AddAsync(entity);
+    }
+
     public async Task<bool> SkuExistsAsync(string sku)
     {
         return await _dbSet.AnyAsync(p => p.SKU == sku);
@@ -20,9 +29,17 @@ public class ProductRepository : GenericRepository<Product>, IProductRepository
     {
         return await _dbSet
             .AsNoTracking()
+            .Include(p => p.Category)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
+    }
+
+    public override async Task<Product?> GetByIdAsync(Guid id)
+    {
+        return await _dbSet
+            .Include(p => p.Category)
+            .FirstOrDefaultAsync(p => p.ProductId == id);
     }
 
     public async Task<int> GetTotalCountAsync()

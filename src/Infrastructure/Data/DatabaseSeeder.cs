@@ -62,6 +62,34 @@ public class DatabaseSeeder
             };
             await _context.ProductCategories.AddAsync(category);
 
+            var furnitureCategory = new ProductCategory
+            {
+                CategoryId = Guid.NewGuid(),
+                CategoryName = "Furniture",
+                Description = "Office and home furniture"
+            };
+            await _context.ProductCategories.AddAsync(furnitureCategory);
+
+            var foodCategory = new ProductCategory
+            {
+                CategoryId = Guid.NewGuid(),
+                CategoryName = "Food & Beverages",
+                Description = "Perishable and non-perishable food items"
+            };
+            await _context.ProductCategories.AddAsync(foodCategory);
+
+            var categories = new List<ProductCategory>
+            {
+                new ProductCategory { CategoryId = Guid.NewGuid(), CategoryName = "Clothing & Apparel", Description = "Garments, footwear, and accessories" },
+                new ProductCategory { CategoryId = Guid.NewGuid(), CategoryName = "Automotive", Description = "Vehicle parts, tools, and maintenance items" },
+                new ProductCategory { CategoryId = Guid.NewGuid(), CategoryName = "Health & Beauty", Description = "Personal care, cosmetics, and wellness products" },
+                new ProductCategory { CategoryId = Guid.NewGuid(), CategoryName = "Home & Kitchen", Description = "Appliances, cookware, and home decor" },
+                new ProductCategory { CategoryId = Guid.NewGuid(), CategoryName = "Sports & Outdoors", Description = "Athletic gear, camping, and fitness equipment" },
+                new ProductCategory { CategoryId = Guid.NewGuid(), CategoryName = "Books & Stationery", Description = "Educational materials and office supplies" },
+                new ProductCategory { CategoryId = Guid.NewGuid(), CategoryName = "Toys & Games", Description = "Children's toys and entertainment products" }
+            };
+            await _context.ProductCategories.AddRangeAsync(categories);
+
             await _context.SaveChangesAsync();
         }
     }

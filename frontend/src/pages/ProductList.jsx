@@ -130,7 +130,7 @@ const ProductList = () => {
                     <td className="px-6 py-5">
                       <div className="flex flex-col items-center gap-1.5">
                         <div className={`text-sm font-black ${isLowStock ? 'text-red-500' : 'text-emerald-500'}`}>
-                          {total} {product.unitOfMeasure}
+                          {total} <span className="text-[10px] font-medium text-slate-400">({product.unitOfMeasure})</span>
                         </div>
                         {isLowStock && (
                           <div className="flex items-center gap-1 text-[10px] font-bold text-red-400 uppercase animate-pulse">

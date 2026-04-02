@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  inventory-api:
+    build:
+      context: .
+      dockerfile: src/Api/Dockerfile
+    container_name: inventory-api
+    ports:
+      - "5153:5153"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=server=mysql;port=3306;database=InventoryDB;user=root;password=rootpassword;
+      - ConnectionStrings__Redis=redis:6379
+      - Jwt__SecretKey=InventoryManagement_SecretKey_2024_Security!
+      - Jwt__Issuer=InventoryApp
+      - Jwt__Audience=InventoryApp
+    depends_on:
+      - mysql
+      - redis
+
+  inventory-react:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: inventory-react
+    ports:
+      - "8080:80"
+    depends_on:
+      - inventory-api
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=InventoryDB
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6380:6379"
+
+volumes:
+  mysql-data:

@@ -31,6 +31,8 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
         product.UnitOfMeasure = request.UnitOfMeasure;
         product.Cost = request.Cost;
         product.ListPrice = request.ListPrice;
+        product.ReorderLevel = request.ReorderLevel;
+        product.SafetyStock = request.SafetyStock;
         product.IsActive = request.IsActive;
 
         _productRepository.Update(product);

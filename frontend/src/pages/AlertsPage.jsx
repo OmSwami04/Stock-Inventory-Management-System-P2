@@ -2,26 +2,37 @@ import React, { useState, useEffect } from 'react';
 import apiClient from '../api/apiClient';
 import { AlertTriangle, ShieldAlert, Package, Warehouse, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useInventory } from '../context/InventoryContext';
 
 const AlertsPage = () => {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { lastUpdate } = useInventory();
+
+  const fetchAlerts = async () => {
+    try {
+      const res = await apiClient.get('/Stock');
+      const stockData = res.data || [];
+      const lowStock = stockData.filter(s => s.quantityOnHand <= s.reorderLevel);
+      setAlerts(lowStock);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchAlerts = async () => {
-      try {
-        const res = await apiClient.get('/Stock');
-        const stockData = res.data || [];
-        const lowStock = stockData.filter(s => s.quantityOnHand <= s.reorderLevel);
-        setAlerts(lowStock);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchAlerts();
   }, []);
+
+  // Re-fetch alerts when a real-time update is received
+  useEffect(() => {
+    if (lastUpdate) {
+      console.log('Real-time update received in AlertsPage, re-fetching...');
+      fetchAlerts();
+    }
+  }, [lastUpdate]);
 
   if (loading) return <div className="flex items-center justify-center min-h-[400px]">Scanning for alerts...</div>;
 

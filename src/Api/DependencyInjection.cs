@@ -6,7 +6,6 @@ using InventoryManagement.Application.Features.Stock.Validators;
 using InventoryManagement.Interfaces.Pipelines;
 using InventoryManagement.Application.Mappings;
 using InventoryManagement.Infrastructure.Auth;
-using InventoryManagement.Infrastructure.Caching;
 using InventoryManagement.Infrastructure.ChainHandlers;
 using InventoryManagement.Infrastructure.Data;
 using InventoryManagement.Infrastructure.Factories;
@@ -14,7 +13,6 @@ using InventoryManagement.Infrastructure.Repositories;
 using InventoryManagement.Infrastructure.UnitOfWork;
 using InventoryManagement.Interfaces;
 using InventoryManagement.Interfaces.Auth;
-using InventoryManagement.Interfaces.Caching;
 using InventoryManagement.Interfaces.Factories;
 using InventoryManagement.Interfaces.Repositories;
 using InventoryManagement.Interfaces.Services;
@@ -25,7 +23,6 @@ using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Caching.StackExchangeRedis;
 using AutoMapper;
 
 namespace InventoryManagement.Api;
@@ -61,8 +58,11 @@ public static class DependencyInjection
         // 4. Unit of Work
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-        // 5. MediatR (CQRS)
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreateProductCommand).Assembly));
+        // 5. Core Services (CQRS via Services)
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IProductService, ProductService>();
+        services.AddScoped<IStockService, StockService>();
+        services.AddScoped<IInventoryService, InventoryService>();
 
         // 6. AutoMapper
         services.AddAutoMapper(typeof(MappingProfile));
@@ -70,15 +70,7 @@ public static class DependencyInjection
         // 7. FluentValidation
         services.AddValidatorsFromAssemblyContaining<CreateProductCommandValidator>();
 
-        // 8. Redis Cache (Singleton)
-        services.AddStackExchangeRedisCache(options =>
-        {
-            options.Configuration = configuration.GetConnectionString("Redis") ?? "localhost:6379";
-            options.InstanceName = "InventoryCache_";
-        });
-        services.AddSingleton<ICacheService, RedisCacheService>();
-
-        // 9. Auth
+        // 8. Auth
         services.AddScoped<IJwtProvider, JwtProvider>();
 
         var jwtKey = configuration["Jwt:SecretKey"] ?? "ThisIsASuperSecretKeyThatMeetsTheLengthRequirementForHmacSha256!";

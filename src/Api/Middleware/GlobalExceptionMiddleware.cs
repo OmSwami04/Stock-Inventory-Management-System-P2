@@ -52,12 +52,17 @@ public class GlobalExceptionMiddleware
 
         context.Response.StatusCode = (int)statusCode;
 
+        var options = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
+
         var result = JsonSerializer.Serialize(new
         {
             StatusCode = context.Response.StatusCode,
             Message = exception.Message,
             Detailed = exception.InnerException?.Message
-        });
+        }, options);
 
         return context.Response.WriteAsync(result);
     }

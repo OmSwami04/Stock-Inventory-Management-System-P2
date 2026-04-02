@@ -18,7 +18,9 @@ public class InventoryAnalyticsService : IInventoryAnalyticsService
         using var scope = _scopeFactory.CreateScope();
         var stockLevelRepository = scope.ServiceProvider.GetRequiredService<IStockLevelRepository>();
         var stocks = await stockLevelRepository.GetAllAsync();
-        return stocks.Count(s => s.QuantityOnHand < 10);
+        
+        // Use the product's specific reorder level for accurate alerts
+        return stocks.Count(s => s.Product != null && s.QuantityOnHand <= s.Product.ReorderLevel);
     }
 
     public async Task<decimal> GetTotalInventoryValueAsync()

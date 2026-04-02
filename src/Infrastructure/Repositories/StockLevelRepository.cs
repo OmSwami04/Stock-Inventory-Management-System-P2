@@ -11,18 +11,35 @@ public class StockLevelRepository : GenericRepository<StockLevel>, IStockLevelRe
     {
     }
 
+    public override async Task<IEnumerable<StockLevel>> GetAllAsync()
+    {
+        return await _dbSet
+            .Include(s => s.Product)
+            .Include(s => s.Warehouse)
+            .ToListAsync();
+    }
+
     public async Task<StockLevel?> GetByProductAndWarehouseAsync(Guid productId, Guid warehouseId)
     {
-        return await _dbSet.FirstOrDefaultAsync(s => s.ProductId == productId && s.WarehouseId == warehouseId);
+        return await _dbSet
+            .Include(s => s.Product)
+            .Include(s => s.Warehouse)
+            .FirstOrDefaultAsync(s => s.ProductId == productId && s.WarehouseId == warehouseId);
     }
 
     public async Task<IEnumerable<StockLevel>> GetByProductIdAsync(Guid productId)
     {
-        return await _dbSet.Where(s => s.ProductId == productId).ToListAsync();
+        return await _dbSet
+            .Include(s => s.Product)
+            .Include(s => s.Warehouse)
+            .Where(s => s.ProductId == productId).ToListAsync();
     }
 
     public async Task<IEnumerable<StockLevel>> GetByWarehouseIdAsync(Guid warehouseId)
     {
-        return await _dbSet.Where(s => s.WarehouseId == warehouseId).ToListAsync();
+        return await _dbSet
+            .Include(s => s.Product)
+            .Include(s => s.Warehouse)
+            .Where(s => s.WarehouseId == warehouseId).ToListAsync();
     }
 }

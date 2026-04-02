@@ -11,5 +11,7 @@ public class ProductDto
     public string UnitOfMeasure { get; set; } = string.Empty;
     public decimal Cost { get; set; }
     public decimal ListPrice { get; set; }
+    public int ReorderLevel { get; set; }
+    public int SafetyStock { get; set; }
     public bool IsActive { get; set; }
 }

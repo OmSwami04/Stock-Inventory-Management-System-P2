@@ -16,6 +16,8 @@ const ProductForm = () => {
     unitOfMeasure: 'pcs',
     cost: 0,
     listPrice: 0,
+    reorderLevel: 0,
+    safetyStock: 0,
     isActive: true,
   });
 
@@ -36,7 +38,19 @@ const ProductForm = () => {
         setCategories(catRes.data || []);
         
         if (prodRes) {
-          setFormData(prodRes.data);
+          const product = prodRes.data;
+          setFormData({
+            productName: product.productName || '',
+            sku: product.sku || '',
+            description: product.description || '',
+            categoryId: product.categoryId || '',
+            unitOfMeasure: product.unitOfMeasure || 'pcs',
+            cost: product.cost ?? 0,
+            listPrice: product.listPrice ?? 0,
+            reorderLevel: product.reorderLevel ?? 0,
+            safetyStock: product.safetyStock ?? 0,
+            isActive: product.isActive ?? true,
+          });
         } else if (catRes.data?.length > 0) {
           setFormData(prev => ({ ...prev, categoryId: catRes.data[0].categoryId }));
         }
@@ -219,6 +233,37 @@ const ProductForm = () => {
                        className="w-full pl-11 pr-4 py-3 bg-blue-50/10 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-black text-blue-700"
                        value={formData.listPrice}
                        onChange={handleChange}
+                     />
+                   </div>
+                 </div>
+               </div>
+
+               <div className="grid grid-cols-2 gap-4">
+                 <div>
+                   <label className="block text-sm font-bold text-slate-700 mb-2">Reorder Level</label>
+                   <div className="relative group">
+                     <Hash className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-500" size={18} />
+                     <input
+                       type="number"
+                       name="reorderLevel"
+                       className="w-full pl-11 pr-4 py-3 bg-orange-50/10 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 transition-all font-black text-orange-700"
+                       value={formData.reorderLevel}
+                       onChange={handleChange}
+                       placeholder="Min stock for alert"
+                     />
+                   </div>
+                 </div>
+                 <div>
+                   <label className="block text-sm font-bold text-slate-700 mb-2">Safety Stock</label>
+                   <div className="relative group">
+                     <Hash className="absolute left-4 top-1/2 -translate-y-1/2 text-red-500" size={18} />
+                     <input
+                       type="number"
+                       name="safetyStock"
+                       className="w-full pl-11 pr-4 py-3 bg-red-50/10 border border-slate-200 rounded-xl focus:ring-2 focus:ring-red-500 transition-all font-black text-red-700"
+                       value={formData.safetyStock}
+                       onChange={handleChange}
+                       placeholder="Emergency reserve"
                      />
                    </div>
                  </div>

@@ -2,11 +2,32 @@ using InventoryManagement.Api.Middleware;
 using InventoryManagement.Api;
 using Microsoft.OpenApi.Models;
 using InventoryManagement.Infrastructure.Data;
+using InventoryManagement.Api.Hubs;
+using InventoryManagement.Interfaces.Services;
+using InventoryManagement.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddSignalR();
+builder.Services.AddScoped<IStockNotificationService, StockNotificationService>();
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(builder =>
+    {
+        builder.WithOrigins("http://localhost:5174") // Vite dev server
+               .AllowAnyHeader()
+               .AllowAnyMethod()
+               .AllowCredentials();
+    });
+});
+
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+    });
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(c =>
@@ -53,12 +74,15 @@ if (app.Environment.IsDevelopment())
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
+app.UseCors();
+
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<InventoryHub>("/inventoryHub");
 
 // Seed Database
 using (var scope = app.Services.CreateScope())

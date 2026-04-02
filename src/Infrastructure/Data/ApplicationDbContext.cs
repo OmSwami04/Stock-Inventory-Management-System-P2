@@ -24,6 +24,17 @@ public class ApplicationDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        // Map to lowercase table names as seen in MySQL
+        modelBuilder.Entity<Product>().ToTable("products");
+        modelBuilder.Entity<ProductCategory>().ToTable("productcategories");
+        modelBuilder.Entity<Warehouse>().ToTable("warehouses");
+        modelBuilder.Entity<StockLevel>().ToTable("stocklevels");
+        modelBuilder.Entity<StockTransaction>().ToTable("stocktransactions");
+        modelBuilder.Entity<User>().ToTable("users");
+        modelBuilder.Entity<Role>().ToTable("roles");
+        modelBuilder.Entity<Supplier>().ToTable("suppliers");
+        modelBuilder.Entity<ProductSupplier>().ToTable("productsuppliers");
+
         // Product Category Configuration
         modelBuilder.Entity<ProductCategory>(entity =>
         {

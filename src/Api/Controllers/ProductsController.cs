@@ -1,9 +1,9 @@
-using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using InventoryManagement.Application.Features.Products.Commands;
 using InventoryManagement.Application.Features.Products.Queries;
 using InventoryManagement.Shared.Constants;
+using InventoryManagement.Interfaces.Services;
 
 namespace InventoryManagement.Api.Controllers;
 
@@ -12,19 +12,18 @@ namespace InventoryManagement.Api.Controllers;
 [Authorize]
 public class ProductsController : ControllerBase
 {
-    private readonly IMediator _mediator;
+    private readonly IProductService _productService;
 
-    public ProductsController(IMediator mediator)
+    public ProductsController(IProductService productService)
     {
-        _mediator = mediator;
+        _productService = productService;
     }
 
     [HttpGet]
     [Authorize(Roles = $"{Roles.InventoryClerk},{Roles.InventoryManager},{Roles.Admin}")]
     public async Task<IActionResult> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
     {
-        var query = new GetAllProductsQuery(pageNumber, pageSize);
-        var result = await _mediator.Send(query);
+        var result = await _productService.GetAllProductsAsync(pageNumber, pageSize);
         return Ok(result);
     }
 
@@ -32,7 +31,7 @@ public class ProductsController : ControllerBase
     [Authorize(Roles = $"{Roles.InventoryClerk},{Roles.InventoryManager},{Roles.Admin}")]
     public async Task<IActionResult> GetById(Guid id)
     {
-        var result = await _mediator.Send(new GetProductByIdQuery(id));
+        var result = await _productService.GetProductByIdAsync(id);
         return Ok(result);
     }
 
@@ -40,7 +39,7 @@ public class ProductsController : ControllerBase
     [Authorize(Roles = $"{Roles.InventoryManager},{Roles.Admin}")]
     public async Task<IActionResult> Create([FromBody] CreateProductCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await _productService.CreateProductAsync(command.SKU, command.ProductName, command.Description, command.CategoryId, command.UnitOfMeasure, command.Cost, command.ListPrice, command.ReorderLevel, command.SafetyStock);
         return CreatedAtAction(nameof(GetById), new { id = result }, null);
     }
 
@@ -49,7 +48,7 @@ public class ProductsController : ControllerBase
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateProductCommand command)
     {
         if (id != command.ProductId) return BadRequest();
-        await _mediator.Send(command);
+        await _productService.UpdateProductAsync(command.ProductId, command.ProductName, command.Description, command.CategoryId, command.UnitOfMeasure, command.Cost, command.ListPrice, command.ReorderLevel, command.SafetyStock, command.IsActive);
         return NoContent();
     }
 
@@ -57,7 +56,7 @@ public class ProductsController : ControllerBase
     [Authorize(Roles = Roles.Admin)]
     public async Task<IActionResult> Delete(Guid id)
     {
-        await _mediator.Send(new DeleteProductCommand(id));
+        await _productService.DeleteProductAsync(id);
         return NoContent();
     }
 }

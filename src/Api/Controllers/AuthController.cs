@@ -1,6 +1,6 @@
-using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using InventoryManagement.Application.Features.Auth.Commands;
+using InventoryManagement.Interfaces.Services;
 
 namespace InventoryManagement.Api.Controllers;
 
@@ -8,17 +8,17 @@ namespace InventoryManagement.Api.Controllers;
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly IMediator _mediator;
+    private readonly IAuthService _authService;
 
-    public AuthController(IMediator mediator)
+    public AuthController(IAuthService authService)
     {
-        _mediator = mediator;
+        _authService = authService;
     }
 
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginCommand command)
     {
-        var token = await _mediator.Send(command);
+        var token = await _authService.LoginAsync(command.Username, command.Password);
         return Ok(new { Token = token });
     }
 }

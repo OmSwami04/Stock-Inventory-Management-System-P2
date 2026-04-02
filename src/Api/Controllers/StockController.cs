@@ -1,9 +1,8 @@
-using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using InventoryManagement.Application.Features.Stock.Commands;
-using InventoryManagement.Application.Features.Stock.Queries;
 using InventoryManagement.Shared.Constants;
+using InventoryManagement.Interfaces.Services;
 
 namespace InventoryManagement.Api.Controllers;
 
@@ -12,18 +11,18 @@ namespace InventoryManagement.Api.Controllers;
 [Authorize]
 public class StockController : ControllerBase
 {
-    private readonly IMediator _mediator;
+    private readonly IStockService _stockService;
 
-    public StockController(IMediator mediator)
+    public StockController(IStockService stockService)
     {
-        _mediator = mediator;
+        _stockService = stockService;
     }
 
     [HttpGet]
     [Authorize(Roles = $"{Roles.InventoryClerk},{Roles.InventoryManager},{Roles.Admin}")]
     public async Task<IActionResult> GetAll()
     {
-        var result = await _mediator.Send(new GetAllStockQuery());
+        var result = await _stockService.GetAllStockAsync();
         return Ok(result);
     }
 
@@ -31,7 +30,7 @@ public class StockController : ControllerBase
     [Authorize(Roles = $"{Roles.InventoryClerk},{Roles.InventoryManager},{Roles.Admin}")]
     public async Task<IActionResult> GetByProduct(Guid productId)
     {
-        var result = await _mediator.Send(new GetStockByProductQuery(productId));
+        var result = await _stockService.GetStockByProductAsync(productId);
         return Ok(result);
     }
 
@@ -39,7 +38,7 @@ public class StockController : ControllerBase
     [Authorize(Roles = $"{Roles.InventoryClerk},{Roles.InventoryManager},{Roles.Admin}")]
     public async Task<IActionResult> GetByWarehouse(Guid warehouseId)
     {
-        var result = await _mediator.Send(new GetStockByWarehouseQuery(warehouseId));
+        var result = await _stockService.GetStockByWarehouseAsync(warehouseId);
         return Ok(result);
     }
 
@@ -47,7 +46,7 @@ public class StockController : ControllerBase
     [Authorize(Roles = $"{Roles.InventoryClerk},{Roles.InventoryManager},{Roles.Admin}")]
     public async Task<IActionResult> Transaction([FromBody] CreateStockTransactionCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await _stockService.CreateStockTransactionAsync(command.ProductId, command.WarehouseId, command.TransactionType.ToString(), command.Quantity, command.ReferenceNumber, command.TransactionDate);
         return Ok(new { TransactionId = result });
     }
 }

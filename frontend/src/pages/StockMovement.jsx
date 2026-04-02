@@ -89,7 +89,8 @@ const StockMovement = () => {
       const stock = res.data.find(s => s.warehouseId === formData.warehouseId);
       setCurrentStock(stock ? stock.quantityOnHand : 0);
     } catch (err) {
-      setMessage({ type: 'error', text: err.response?.data?.message || 'Transaction failed.' });
+      const errorMsg = err.response?.data?.detailed || err.response?.data?.message || 'Transaction failed.';
+      setMessage({ type: 'error', text: errorMsg });
     } finally {
       setSubmitting(false);
     }

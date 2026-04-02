@@ -9,5 +9,7 @@ public record CreateProductCommand(
     Guid CategoryId,
     string UnitOfMeasure,
     decimal Cost,
-    decimal ListPrice
+    decimal ListPrice,
+    int ReorderLevel,
+    int SafetyStock
 ) : IRequest<Guid>;

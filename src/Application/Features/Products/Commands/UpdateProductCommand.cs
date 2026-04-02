@@ -10,5 +10,7 @@ public record UpdateProductCommand(
     string UnitOfMeasure,
     decimal Cost,
     decimal ListPrice,
+    int ReorderLevel,
+    int SafetyStock,
     bool IsActive
 ) : IRequest<Unit>;

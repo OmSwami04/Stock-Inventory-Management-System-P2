@@ -23,11 +23,11 @@ const Dashboard = () => {
         const products = productsRes.data.items || [];
         const stockData = stockRes.data || [];
         
-        const lowStock = stockData.filter(s => s.quantity <= s.reorderLevel).length;
+        const lowStock = stockData.filter(s => s.quantityOnHand <= s.reorderLevel).length;
 
         setStats({
           totalProducts: products.length,
-          totalValue: valuationRes.data.totalValue || 0,
+          totalValue: valuationRes.data.totalInventoryValue || 0,
           lowStockCount: lowStock,
         });
       } catch (err) {

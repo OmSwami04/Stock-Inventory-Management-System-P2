@@ -43,17 +43,32 @@ public class DatabaseSeeder
                 RoleId = adminRole.RoleId
             };
             await _context.Users.AddAsync(adminUser);
+        }
 
-            // Add a sample Warehouse and Category for testing
-            var warehouse = new Warehouse
+        if (!await _context.Warehouses.AnyAsync())
+        {
+            var warehouses = new List<Warehouse>
             {
-                WarehouseId = Guid.NewGuid(),
-                WarehouseName = "Main Warehouse",
-                Location = "New York",
-                Capacity = 10000
+                new Warehouse { WarehouseId = Guid.NewGuid(), WarehouseName = "Global Distribution Hub", Location = "New York, NY", Capacity = 50000 },
+                new Warehouse { WarehouseId = Guid.NewGuid(), WarehouseName = "West Coast Fulfillment", Location = "Los Angeles, CA", Capacity = 25000 },
+                new Warehouse { WarehouseId = Guid.NewGuid(), WarehouseName = "Midwest Logistics Center", Location = "Chicago, IL", Capacity = 15000 }
             };
-            await _context.Warehouses.AddAsync(warehouse);
+            await _context.Warehouses.AddRangeAsync(warehouses);
+        }
 
+        if (!await _context.Suppliers.AnyAsync())
+        {
+            var suppliers = new List<Supplier>
+            {
+                new Supplier { SupplierId = Guid.NewGuid(), SupplierName = "TechNova Electronics", Email = "sales@technova.com", Phone = "+1 (800) 555-0123", Website = "https://technova.com" },
+                new Supplier { SupplierId = Guid.NewGuid(), SupplierName = "LuxeFurnish Co.", Email = "info@luxefurnish.net", Phone = "+1 (800) 555-0456", Website = "https://luxefurnish.net" },
+                new Supplier { SupplierId = Guid.NewGuid(), SupplierName = "Global Pantry Supplies", Email = "pantry@globalfood.org", Phone = "+1 (800) 555-0789", Website = "https://globalpantry.org" }
+            };
+            await _context.Suppliers.AddRangeAsync(suppliers);
+        }
+
+        if (!await _context.ProductCategories.AnyAsync())
+        {
             var category = new ProductCategory
             {
                 CategoryId = Guid.NewGuid(),
@@ -89,8 +104,8 @@ public class DatabaseSeeder
                 new ProductCategory { CategoryId = Guid.NewGuid(), CategoryName = "Toys & Games", Description = "Children's toys and entertainment products" }
             };
             await _context.ProductCategories.AddRangeAsync(categories);
-
-            await _context.SaveChangesAsync();
         }
+
+        await _context.SaveChangesAsync();
     }
 }

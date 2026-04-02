@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import apiClient from '../api/apiClient';
 import { Package, DollarSign, AlertTriangle, TrendingUp, History } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { useInventory } from '../context/InventoryContext';
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -9,36 +10,59 @@ const Dashboard = () => {
     totalValue: 0,
     lowStockCount: 0,
   });
+  const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { lastUpdate } = useInventory();
+
+  const fetchDashboardData = async () => {
+    try {
+      const [productsRes, valuationRes, stockRes] = await Promise.all([
+        apiClient.get('/Products?pageSize=1000'),
+        apiClient.get('/Inventory/valuation'),
+        apiClient.get('/Stock')
+      ]);
+
+      const products = productsRes.data.items || [];
+      const stockData = stockRes.data || [];
+      
+      const lowStock = stockData.filter(s => s.quantityOnHand <= s.reorderLevel).length;
+
+      // Calculate warehouse distribution
+      const distribution = stockData.reduce((acc, curr) => {
+        const warehouse = curr.warehouseName || 'Unknown';
+        if (!acc[warehouse]) acc[warehouse] = 0;
+        acc[warehouse] += curr.quantityOnHand;
+        return acc;
+      }, {});
+
+      const formattedChartData = Object.keys(distribution).map(key => ({
+        name: key,
+        stock: distribution[key]
+      }));
+
+      setStats({
+        totalProducts: products.length,
+        totalValue: valuationRes.data.totalInventoryValue || 0,
+        lowStockCount: lowStock,
+      });
+      setChartData(formattedChartData);
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const [productsRes, valuationRes, stockRes] = await Promise.all([
-          apiClient.get('/Products?pageSize=1000'),
-          apiClient.get('/Inventory/valuation'),
-          apiClient.get('/Stock')
-        ]);
-
-        const products = productsRes.data.items || [];
-        const stockData = stockRes.data || [];
-        
-        const lowStock = stockData.filter(s => s.quantityOnHand <= s.reorderLevel).length;
-
-        setStats({
-          totalProducts: products.length,
-          totalValue: valuationRes.data.totalInventoryValue || 0,
-          lowStockCount: lowStock,
-        });
-      } catch (err) {
-        console.error('Error fetching dashboard data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchDashboardData();
   }, []);
+
+  useEffect(() => {
+    if (lastUpdate) {
+      console.log('Real-time update received in Dashboard, re-fetching...');
+      fetchDashboardData();
+    }
+  }, [lastUpdate]);
 
   const statCards = [
     { name: 'Total Products', value: stats.totalProducts, icon: <Package size={24} />, color: 'blue' },
@@ -78,23 +102,16 @@ const Dashboard = () => {
             </h3>
           </div>
           <div className="h-[300px]">
-             {/* Mock chart data for now */}
              <ResponsiveContainer width="100%" height="100%">
-               <BarChart data={[
-                 {name: 'Warehouse A', stock: 400},
-                 {name: 'Warehouse B', stock: 300},
-                 {name: 'Warehouse C', stock: 200},
-                 {name: 'Inventory D', stock: 278},
-               ]}>
+               <BarChart data={chartData}>
                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontWeight: 600, fontSize: 12}} dy={10} />
                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontWeight: 600, fontSize: 12}} />
                  <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}} />
                  <Bar dataKey="stock" radius={[6, 6, 0, 0]} barSize={40}>
-                   <Cell fill="#3b82f6" />
-                   <Cell fill="#10b981" />
-                   <Cell fill="#f59e0b" />
-                   <Cell fill="#6366f1" />
+                   {chartData.map((entry, index) => (
+                     <Cell key={`cell-${index}`} fill={['#3b82f6', '#10b981', '#f59e0b', '#6366f1', '#ec4899', '#8b5cf6'][index % 6]} />
+                   ))}
                  </Bar>
                </BarChart>
              </ResponsiveContainer>

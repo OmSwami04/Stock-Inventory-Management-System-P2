@@ -17,17 +17,20 @@ public class ProductService : IProductService
     private readonly IStockLevelRepository _stockLevelRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly IStockNotificationService _notificationService;
 
     public ProductService(
         IProductRepository productRepository, 
         IStockLevelRepository stockLevelRepository, 
         IUnitOfWork unitOfWork, 
-        IMapper mapper)
+        IMapper mapper,
+        IStockNotificationService notificationService)
     {
         _productRepository = productRepository;
         _stockLevelRepository = stockLevelRepository;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _notificationService = notificationService;
     }
 
     public async Task<Guid> CreateProductAsync(string sku, string productName, string description, Guid categoryId, string unitOfMeasure, decimal cost, decimal listPrice, int reorderLevel, int safetyStock)
@@ -51,6 +54,8 @@ public class ProductService : IProductService
         await _productRepository.AddAsync(product);
         await _unitOfWork.SaveChangesAsync();
 
+        await _notificationService.NotifyStockUpdateAsync(product.ProductId, product.ProductName, 0, product.ReorderLevel);
+
         return product.ProductId;
     }
 
@@ -71,6 +76,8 @@ public class ProductService : IProductService
 
         _productRepository.Update(product);
         await _unitOfWork.SaveChangesAsync();
+
+        await _notificationService.NotifyStockUpdateAsync(product.ProductId, product.ProductName, 0, product.ReorderLevel);
     }
 
     public async Task DeleteProductAsync(Guid id)
@@ -87,6 +94,8 @@ public class ProductService : IProductService
 
         _productRepository.Delete(product);
         await _unitOfWork.SaveChangesAsync();
+
+        await _notificationService.NotifyStockUpdateAsync(id, product.ProductName, 0, 0);
     }
 
     public async Task<object> GetProductByIdAsync(Guid id)

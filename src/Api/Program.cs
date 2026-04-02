@@ -16,7 +16,7 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(builder =>
     {
-        builder.WithOrigins("http://localhost:5174") // Vite dev server
+        builder.WithOrigins("http://localhost:5173", "http://localhost:5174") // Vite dev servers
                .AllowAnyHeader()
                .AllowAnyMethod()
                .AllowCredentials();

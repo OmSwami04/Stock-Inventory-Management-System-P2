@@ -23,4 +23,40 @@ public class WarehousesController : ControllerBase
         var warehouses = await _repository.GetAllAsync();
         return Ok(warehouses);
     }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(Guid id)
+    {
+        var warehouse = await _repository.GetByIdAsync(id);
+        if (warehouse == null) return NotFound();
+        return Ok(warehouse);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] Warehouse warehouse)
+    {
+        warehouse.WarehouseId = Guid.NewGuid();
+        await _repository.AddAsync(warehouse);
+        await _repository.SaveChangesAsync();
+        return CreatedAtAction(nameof(GetById), new { id = warehouse.WarehouseId }, warehouse);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(Guid id, [FromBody] Warehouse warehouse)
+    {
+        if (id != warehouse.WarehouseId) return BadRequest();
+        _repository.Update(warehouse);
+        await _repository.SaveChangesAsync();
+        return NoContent();
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        var warehouse = await _repository.GetByIdAsync(id);
+        if (warehouse == null) return NotFound();
+        _repository.Delete(warehouse);
+        await _repository.SaveChangesAsync();
+        return NoContent();
+    }
 }

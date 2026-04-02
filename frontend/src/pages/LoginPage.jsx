@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Lock, User, Loader2, Box } from 'lucide-react';
 
@@ -92,6 +92,15 @@ const LoginPage = () => {
               )}
             </button>
           </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-slate-500 text-sm">
+              Don't have an account?{' '}
+              <Link to="/register" className="text-blue-600 font-bold hover:underline underline-offset-4">
+                Sign Up
+              </Link>
+            </p>
+          </div>
           
           <div className="mt-8 pt-8 border-t border-slate-100 text-center">
              <p className="text-slate-400 text-xs font-semibold tracking-wide uppercase">Powered by StockPro Engine</p>

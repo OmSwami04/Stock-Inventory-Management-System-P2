@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Box, ArrowLeftRight, Bell, LogOut, Package } from 'lucide-react';
+import { LayoutDashboard, Box, ArrowLeftRight, Bell, LogOut, Package, Truck, Warehouse } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const Sidebar = () => {
@@ -9,18 +9,20 @@ const Sidebar = () => {
   const navItems = [
     { name: 'Dashboard', path: '/', icon: <LayoutDashboard size={20} />, roles: ['Admin', 'InventoryManager', 'InventoryClerk'] },
     { name: 'Products', path: '/products', icon: <Package size={20} />, roles: ['Admin', 'InventoryManager', 'InventoryClerk'] },
+    { name: 'Suppliers', path: '/suppliers', icon: <Truck size={20} />, roles: ['Admin', 'InventoryManager'] },
+    { name: 'Warehouses', path: '/warehouses', icon: <Warehouse size={20} />, roles: ['Admin', 'InventoryManager', 'InventoryClerk'] },
     { name: 'Stock Movement', path: '/stock-movement', icon: <ArrowLeftRight size={20} />, roles: ['Admin', 'InventoryManager', 'InventoryClerk'] },
     { name: 'Alerts', path: '/alerts', icon: <Bell size={20} />, roles: ['Admin', 'InventoryManager', 'InventoryClerk'] },
   ];
 
   return (
-    <div className="flex flex-col h-screen w-64 bg-slate-900 text-white border-r border-slate-700">
+    <div className="flex flex-col h-screen w-64 bg-slate-900 text-white border-r border-slate-700 sticky top-0">
       <div className="p-6 flex items-center gap-3">
         <Box className="text-blue-500" size={32} />
         <span className="text-xl font-bold tracking-tight">StockPro</span>
       </div>
 
-      <nav className="flex-1 px-4 py-4 space-y-1">
+      <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
         {navItems.map((item) => (
           hasRole(item.roles) && (
             <NavLink
@@ -39,19 +41,19 @@ const Sidebar = () => {
         ))}
       </nav>
 
-      <div className="p-4 border-t border-slate-800">
+      <div className="mt-auto p-4 border-t border-slate-800 bg-slate-900">
         <div className="flex items-center gap-3 mb-4 px-4">
-          <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center font-bold">
+          <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center font-bold text-lg shrink-0 shadow-sm border border-blue-400/20">
             {user?.username?.charAt(0).toUpperCase()}
           </div>
           <div className="overflow-hidden">
-            <p className="text-sm font-medium truncate">{user?.username}</p>
-            <p className="text-xs text-slate-500 truncate">{user?.role}</p>
+            <p className="text-sm font-semibold truncate">{user?.username}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 truncate">{user?.role}</p>
           </div>
         </div>
         <button
           onClick={logout}
-          className="flex items-center gap-3 w-full px-4 py-3 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-colors"
+          className="flex items-center gap-3 w-full px-4 py-3 text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all duration-200"
         >
           <LogOut size={20} />
           <span className="font-medium">Logout</span>

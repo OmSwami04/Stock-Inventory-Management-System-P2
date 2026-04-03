@@ -6,9 +6,11 @@ using InventoryManagement.Interfaces.Pipelines;
 using Microsoft.Extensions.Logging;
 using AutoMapper;
 using InventoryManagement.Application.Features.Stock.Commands;
+using InventoryManagement.Application.Features.Stock.DTOs;
 using InventoryManagement.Domain.Enums;
 using InventoryManagement.Domain.Entities;
 using InventoryManagement.Shared.Exceptions;
+using InventoryManagement.Interfaces.Services;
 using Xunit;
 
 namespace InventoryManagement.Tests;
@@ -21,6 +23,7 @@ public class StockServiceTests
     private readonly Mock<IStockTransactionValidationPipeline> _validationPipelineMock;
     private readonly Mock<ILogger<StockService>> _loggerMock;
     private readonly Mock<IMapper> _mapperMock;
+    private readonly Mock<IStockNotificationService> _notificationServiceMock;
     private readonly StockService _stockService;
 
     public StockServiceTests()
@@ -31,6 +34,7 @@ public class StockServiceTests
         _validationPipelineMock = new Mock<IStockTransactionValidationPipeline>();
         _loggerMock = new Mock<ILogger<StockService>>();
         _mapperMock = new Mock<IMapper>();
+        _notificationServiceMock = new Mock<IStockNotificationService>();
 
         _stockService = new StockService(
             _transactionRepoMock.Object,
@@ -38,7 +42,8 @@ public class StockServiceTests
             _uowMock.Object,
             _validationPipelineMock.Object,
             _loggerMock.Object,
-            _mapperMock.Object);
+            _mapperMock.Object,
+            _notificationServiceMock.Object);
     }
 
     [Fact]
@@ -101,33 +106,72 @@ public class StockServiceTests
     }
 
     [Fact]
-    public async Task GetStockByWarehouse_ShouldReturnMappedStock()
+    public async Task TransferStock_Should_DecreaseSourceAndIncreaseDestination()
     {
         // Arrange
-        var warehouseId = Guid.NewGuid();
-        var stockList = new List<StockLevel> { new StockLevel { WarehouseId = warehouseId } };
-        _stockLevelRepoMock.Setup(x => x.GetByWarehouseIdAsync(warehouseId)).ReturnsAsync(stockList);
-        _mapperMock.Setup(m => m.Map<IEnumerable<StockLevelDto>>(stockList)).Returns(new List<StockLevelDto> { new StockLevelDto() });
+        var productId = Guid.NewGuid();
+        var fromWarId = Guid.NewGuid();
+        var toWarId = Guid.NewGuid();
+        var sourceStock = new StockLevel { ProductId = productId, WarehouseId = fromWarId, QuantityOnHand = 100 };
+        var destStock = new StockLevel { ProductId = productId, WarehouseId = toWarId, QuantityOnHand = 50 };
+
+        _stockLevelRepoMock.Setup(x => x.GetByProductAndWarehouseAsync(productId, fromWarId)).ReturnsAsync(sourceStock);
+        _stockLevelRepoMock.Setup(x => x.GetByProductAndWarehouseAsync(productId, toWarId)).ReturnsAsync(destStock);
+        _stockLevelRepoMock.Setup(x => x.GetByProductIdAsync(productId)).ReturnsAsync(new List<StockLevel> { sourceStock, destStock });
 
         // Act
-        var result = await _stockService.GetStockByWarehouseAsync(warehouseId);
+        await _stockService.TransferStockAsync(productId, fromWarId, toWarId, 20, "TRF123");
+
+        // Assert
+        Assert.Equal(80, sourceStock.QuantityOnHand);
+        Assert.Equal(70, destStock.QuantityOnHand);
+        _stockLevelRepoMock.Verify(x => x.SaveChangesAsync(), Times.Once);
+        _transactionRepoMock.Verify(x => x.SaveChangesAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task TransferStock_Should_Throw_If_Insufficient_Stock()
+    {
+        // Arrange
+        var productId = Guid.NewGuid();
+        var fromWarId = Guid.NewGuid();
+        var toWarId = Guid.NewGuid();
+        var sourceStock = new StockLevel { ProductId = productId, WarehouseId = fromWarId, QuantityOnHand = 10 };
+
+        _stockLevelRepoMock.Setup(x => x.GetByProductAndWarehouseAsync(productId, fromWarId)).ReturnsAsync(sourceStock);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _stockService.TransferStockAsync(productId, fromWarId, toWarId, 20, "TRF123"));
+    }
+
+    [Fact]
+    public async Task GetAllStock_ShouldReturnMappedList()
+    {
+        // Arrange
+        var stocks = new List<StockLevel> { new StockLevel() };
+        _stockLevelRepoMock.Setup(x => x.GetAllAsync()).ReturnsAsync(stocks);
+        _mapperMock.Setup(m => m.Map<IEnumerable<StockLevelDto>>(stocks)).Returns(new List<StockLevelDto> { new StockLevelDto() });
+
+        // Act
+        var result = await _stockService.GetAllStockAsync();
 
         // Assert
         Assert.Single(result);
     }
 
     [Fact]
-    public async Task GetAllStock_ShouldReturnMappedStock()
+    public async Task GetStockByWarehouse_ShouldReturnMappedList()
     {
         // Arrange
-        var stockList = new List<StockLevel> { new StockLevel(), new StockLevel() };
-        _stockLevelRepoMock.Setup(x => x.GetAllAsync()).ReturnsAsync(stockList);
-        _mapperMock.Setup(m => m.Map<IEnumerable<StockLevelDto>>(stockList)).Returns(new List<StockLevelDto> { new StockLevelDto(), new StockLevelDto() });
+        var warId = Guid.NewGuid();
+        var stocks = new List<StockLevel> { new StockLevel { WarehouseId = warId } };
+        _stockLevelRepoMock.Setup(x => x.GetByWarehouseIdAsync(warId)).ReturnsAsync(stocks);
+        _mapperMock.Setup(m => m.Map<IEnumerable<StockLevelDto>>(stocks)).Returns(new List<StockLevelDto> { new StockLevelDto() });
 
         // Act
-        var result = await _stockService.GetAllStockAsync();
+        var result = await _stockService.GetStockByWarehouseAsync(warId);
 
         // Assert
-        Assert.Equal(2, result.Count());
+        Assert.Single(result);
     }
 }

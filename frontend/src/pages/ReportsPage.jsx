@@ -83,8 +83,8 @@ const ReportsPage = () => {
         item.sku,
         item.warehouseName,
         item.quantityOnHand,
-        `$${item.unitCost.toLocaleString()}`,
-        `$${item.totalValue.toLocaleString()}`
+        `₹${item.unitCost.toLocaleString()}`,
+        `₹${item.totalValue.toLocaleString()}`
       ];
       tableRows.push(rowData);
     });
@@ -94,7 +94,7 @@ const ReportsPage = () => {
     doc.setFontSize(11);
     doc.setTextColor(100);
     doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
-    doc.text(`Total Inventory Value: $${summaryData.totalValue.toLocaleString()}`, 14, 38);
+    doc.text(`Total Inventory Value: ₹${summaryData.totalValue.toLocaleString()}`, 14, 38);
 
     autoTable(doc, {
       head: [tableColumn],
@@ -161,7 +161,7 @@ const ReportsPage = () => {
               A comprehensive breakdown of all products across warehouses, including unit costs and total valuation.
             </p>
             <div className="text-2xl font-black text-slate-900 mb-2">
-              ${summaryData.totalValue.toLocaleString()}
+              ₹{summaryData.totalValue.toLocaleString()}
             </div>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Asset Value</p>
           </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import apiClient from '../api/apiClient';
-import { ArrowLeft, Save, Loader2, Package, Hash, DollarSign, Tag, Ruler } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Package, Hash, IndianRupee, Tag, Ruler } from 'lucide-react';
 
 const ProductForm = () => {
   const { id } = useParams();
@@ -211,7 +211,7 @@ const ProductForm = () => {
                  <div>
                    <label className="block text-sm font-bold text-slate-700 mb-2">Purchase Cost</label>
                    <div className="relative group">
-                     <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500" size={18} />
+                     <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500" size={18} />
                      <input
                        type="number"
                        name="cost"
@@ -225,7 +225,7 @@ const ProductForm = () => {
                  <div>
                    <label className="block text-sm font-bold text-slate-700 mb-2">List Price</label>
                    <div className="relative group">
-                     <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500" size={18} />
+                     <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500" size={18} />
                      <input
                        type="number"
                        name="listPrice"

@@ -223,14 +223,15 @@ public class StockService : IStockService
         await _transactionRepository.SaveChangesAsync();
 
         // Notify real-time update
-        var product = await _unitOfWork.Repository<Product>().GetByIdAsync(productId);
-        if (product != null)
+        var product = await _stockLevelRepository.GetByProductIdAsync(productId);
+        var productInfo = product.FirstOrDefault()?.Product;
+        if (productInfo != null)
         {
             var sourceStockLevel = sourceStock.QuantityOnHand;
             var destStockLevel = destinationStock.QuantityOnHand;
             
-            await _notificationService.NotifyStockUpdateAsync(productId, product.ProductName, sourceStockLevel, product.ReorderLevel);
-            await _notificationService.NotifyStockUpdateAsync(productId, product.ProductName, destStockLevel, product.ReorderLevel);
+            await _notificationService.NotifyStockUpdateAsync(productId, productInfo.ProductName, sourceStockLevel, productInfo.ReorderLevel);
+            await _notificationService.NotifyStockUpdateAsync(productId, productInfo.ProductName, destStockLevel, productInfo.ReorderLevel);
         }
     }
 }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '../api/apiClient';
-import { Package, DollarSign, AlertTriangle, TrendingUp, History } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { Package, IndianRupee, AlertTriangle, TrendingUp, History, Warehouse } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LineChart, Line, Legend } from 'recharts';
 import { useInventory } from '../context/InventoryContext';
 
 const Dashboard = () => {
@@ -11,21 +11,24 @@ const Dashboard = () => {
     lowStockCount: 0,
   });
   const [chartData, setChartData] = useState([]);
+  const [stockMovementData, setStockMovementData] = useState([]);
   const [loading, setLoading] = useState(true);
   const { lastUpdate } = useInventory();
 
   const fetchDashboardData = async () => {
     try {
-      const [productsRes, valuationRes, stockRes, warehousesRes] = await Promise.all([
+      const [productsRes, valuationRes, stockRes, warehousesRes, transactionsRes] = await Promise.all([
         apiClient.get('/Products?pageSize=1000'),
         apiClient.get('/Inventory/valuation'),
         apiClient.get('/Stock'),
-        apiClient.get('/Warehouses')
+        apiClient.get('/Warehouses'),
+        apiClient.get('/Stock/transactions')
       ]);
 
       const products = productsRes.data.items || [];
       const stockData = stockRes.data || [];
       const warehouses = warehousesRes.data || [];
+      const transactions = transactionsRes.data || [];
       
       const lowStock = stockData.filter(s => s.quantityOnHand <= s.reorderLevel).length;
 
@@ -53,8 +56,10 @@ const Dashboard = () => {
         totalProducts: products.length,
         totalValue: valuationRes.data.totalInventoryValue || 0,
         lowStockCount: lowStock,
+        totalWarehouses: warehouses.length,
       });
       setChartData(formattedChartData);
+      setStockMovementData(transactions);
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
     } finally {
@@ -75,8 +80,9 @@ const Dashboard = () => {
 
   const statCards = [
     { name: 'Total Products', value: stats.totalProducts, icon: <Package size={24} />, color: 'blue' },
-    { name: 'Inventory Value', value: `$${stats.totalValue.toLocaleString()}`, icon: <DollarSign size={24} />, color: 'green' },
+    { name: 'Inventory Value', value: `₹${stats.totalValue.toLocaleString()}`, icon: <IndianRupee size={24} />, color: 'green' },
     { name: 'Low Stock Alerts', value: stats.lowStockCount, icon: <AlertTriangle size={24} />, color: 'red' },
+    { name: 'Total Warehouses', value: stats.totalWarehouses, icon: <Warehouse size={24} />, color: 'purple' },
   ];
 
   if (loading) return <div className="flex items-center justify-center min-h-[400px]">Loading Dashboard...</div>;
@@ -131,6 +137,38 @@ const Dashboard = () => {
                  </Bar>
                </BarChart>
              </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-xl font-extrabold text-slate-900 flex items-center gap-2">
+              <History size={24} className="text-blue-600" />
+              Stock Movement
+            </h3>
+          </div>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={stockMovementData.map(t => ({
+                  ...t,
+                  date: new Date(t.transactionDate).toLocaleDateString()
+                }))}
+                margin={{
+                  top: 5,
+                  right: 30,
+                  left: 20,
+                  bottom: 5,
+                }}
+              >
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis dataKey="date" tick={{fill: '#94a3b8', fontWeight: 600, fontSize: 12}} />
+                <YAxis tick={{fill: '#94a3b8', fontWeight: 600, fontSize: 12}} />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="quantity" stroke="#8884d8" activeDot={{ r: 8 }} />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </div>
 

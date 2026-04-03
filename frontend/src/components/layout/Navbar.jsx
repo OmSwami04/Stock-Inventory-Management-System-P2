@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useInventory } from '../../context/InventoryContext';
-import { User, Bell, LogOut, ChevronDown, Shield } from 'lucide-react';
+import { User, Bell, LogOut, ChevronDown, Shield, FileText } from 'lucide-react';
 import apiClient from '../../api/apiClient';
 import { useNavigate } from 'react-router-dom';
 
@@ -49,6 +49,14 @@ const Navbar = () => {
       </h1>
       
       <div className="flex items-center gap-6 text-slate-500">
+        <button 
+          onClick={() => navigate('/reports')}
+          className="flex items-center gap-2 px-3 py-2 text-sm font-bold text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+        >
+          <FileText size={20} />
+          <span className="hidden md:block">Reports</span>
+        </button>
+        <div className="h-8 w-[1px] bg-slate-200" />
         <button 
           onClick={() => navigate('/alerts')}
           className="hover:text-blue-600 transition-colors relative p-2 rounded-full hover:bg-slate-50"

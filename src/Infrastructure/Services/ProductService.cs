@@ -8,6 +8,9 @@ using InventoryManagement.Interfaces.Repositories;
 using InventoryManagement.Interfaces.Services;
 using InventoryManagement.Shared.Exceptions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 namespace InventoryManagement.Infrastructure.Services;
 
@@ -18,19 +21,25 @@ public class ProductService : IProductService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly IStockNotificationService _notificationService;
+    private readonly IDistributedCache _cache;
+    private readonly ILogger<ProductService> _logger;
 
     public ProductService(
         IProductRepository productRepository, 
         IStockLevelRepository stockLevelRepository, 
         IUnitOfWork unitOfWork, 
         IMapper mapper,
-        IStockNotificationService notificationService)
+        IStockNotificationService notificationService,
+        IDistributedCache cache,
+        ILogger<ProductService> logger)
     {
         _productRepository = productRepository;
         _stockLevelRepository = stockLevelRepository;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _notificationService = notificationService;
+        _cache = cache;
+        _logger = logger;
     }
 
     public async Task<Guid> CreateProductAsync(string sku, string productName, string description, Guid categoryId, string unitOfMeasure, decimal cost, decimal listPrice, int reorderLevel, int safetyStock)
@@ -77,6 +86,11 @@ public class ProductService : IProductService
         _productRepository.Update(product);
         await _unitOfWork.SaveChangesAsync();
 
+        // Invalidate cache
+        var cacheKey = $"Product_{productId}";
+        await _cache.RemoveAsync(cacheKey);
+        _logger.LogInformation("Cache invalidated for product {ProductId}", productId);
+
         await _notificationService.NotifyStockUpdateAsync(product.ProductId, product.ProductName, 0, product.ReorderLevel);
     }
 
@@ -95,15 +109,37 @@ public class ProductService : IProductService
         _productRepository.Delete(product);
         await _unitOfWork.SaveChangesAsync();
 
+        // Invalidate cache
+        var cacheKey = $"Product_{id}";
+        await _cache.RemoveAsync(cacheKey);
+        _logger.LogInformation("Cache invalidated for product {ProductId}", id);
+
         await _notificationService.NotifyStockUpdateAsync(id, product.ProductName, 0, 0);
     }
 
     public async Task<object> GetProductByIdAsync(Guid id)
     {
+        var cacheKey = $"Product_{id}";
+        var cachedProduct = await _cache.GetStringAsync(cacheKey);
+
+        if (!string.IsNullOrEmpty(cachedProduct))
+        {
+            _logger.LogInformation("Cache HIT for product {ProductId}", id);
+            return JsonSerializer.Deserialize<ProductDto>(cachedProduct)!;
+        }
+
+        _logger.LogInformation("Cache MISS for product {ProductId}. Fetching from database...", id);
         var product = await _productRepository.GetByIdAsync(id);
         if (product == null) throw new NotFoundException($"Product with ID {id} not found.");
 
-        return _mapper.Map<ProductDto>(product);
+        var productDto = _mapper.Map<ProductDto>(product);
+        
+        await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(productDto), new DistributedCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+        });
+
+        return productDto;
     }
 
     public async Task<object> GetAllProductsAsync(int pageNumber, int pageSize)

@@ -94,6 +94,14 @@ public static class DependencyInjection
 
         services.AddAuthorization();
 
+        // 9. Redis Caching
+        var redisConnectionString = configuration.GetConnectionString("Redis") ?? "localhost:6380";
+        services.AddStackExchangeRedisCache(options =>
+        {
+            options.Configuration = redisConnectionString;
+            options.InstanceName = "Inventory_";
+        });
+
         // 10. Inventory Valuation Factory (Factory Pattern)
         services.AddScoped<IInventoryValuationFactory, InventoryValuationFactory>();
 

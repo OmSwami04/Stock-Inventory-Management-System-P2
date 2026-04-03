@@ -1,58 +1,99 @@
-# Stock / Inventory Management System
+# Stock-Inventory-Management-System-P2
 
-A production-grade ASP.NET Core 10 Web API built using Clean Architecture and Enterprise Design Patterns, fully aligned with your specific database schema.
+Stock-Inventory-Management-System-P2 is a robust, real-time inventory and warehouse management solution designed for modern businesses. It provides a comprehensive suite of tools to track stock levels, manage multi-warehouse distributions, and generate detailed financial reports.
 
-## 🏗 Architecture & Implementation
+## 🚀 Key Features
 
-### Architectural Style
-This project is implemented as a **Clean Architecture Monolith** (Modular Monolith). It is designed to be easily decomposable into microservices.
+### **Real-Time Dashboard**
+- **Dynamic Stats**: Track total products, inventory valuation (in ₹), low stock alerts, and warehouse counts at a glance.
+- **Stock Distribution**: Visualize inventory levels across all warehouses using interactive bar charts.
+- **Live Updates**: Instant UI synchronization via **SignalR** whenever stock movements occur.
 
-### Implementation Layers
-- **API Layer**: Handles HTTP requests, Swagger UI, and Global Exception Handling.
-- **Application Layer**: Business logic via CQRS (MediatR), DTOs, Mapping, and Validation (FluentValidation).
-- **Domain Layer**: Core entities aligned with your specified MySQL schema (`Product`, `StockLevel`, `Supplier`, etc.).
-- **Infrastructure Layer**: Concrete implementations for Data Access (EF Core/MySQL), Caching (Redis), Authentication (JWT/BCrypt), and specialized patterns.
-- **Interfaces Layer**: Abstractions to decouple business logic from infrastructure.
-- **Shared Layer**: Cross-cutting concerns like custom exceptions.
+### **Inventory & Stock Management**
+- **Internal Transfers**: Seamlessly move stock between warehouses with automated transaction logging.
+- **Product Catalog**: Manage detailed product information including SKU, categories, and safety stock levels.
+- **Stock History**: Track every transaction (Purchase, Sale, Transfer) with a dedicated history view.
 
-## ✨ Implemented Patterns & Functionalities
+### **Advanced Reporting**
+- **PDF Generation**: Download professionally formatted reports for Inventory Valuation and Low Stock Alerts using `jspdf`.
+- **Valuation Logic**: Automatic calculation of asset value based on purchase costs and current quantities.
 
-### Design Patterns
-1. **CQRS (Command Query Responsibility Segregation)**: Commands for writes, Queries for reads.
-2. **Repository Pattern**: Abstracted data access via Generic and Specific repositories.
-3. **Unit of Work Pattern**: Atomic transactions across multiple repositories.
-4. **Factory Design Pattern**: `InventoryValuationFactory` for dynamic method selection (FIFO, LIFO, Weighted Average).
-5. **Chain of Responsibility Pattern**: `StockTransactionValidationPipeline` for multi-step transaction verification.
-6. **Singleton Pattern**: Used for Caching and Analytics services.
+### **Performance & Scalability**
+- **Redis Caching**: High-performance data retrieval using distributed caching for product details.
+- **CQRS Pattern**: Clean architectural separation between data modification (Commands) and data retrieval (Queries).
+- **Validation Pipeline**: Robust chain-of-responsibility pattern for validating complex business rules.
 
-### Updated Data Schema
-The system now reflects the following entities:
-- **Product**: Aligned with new fields (`SKU`, `ProductName`, `CategoryId`, `UnitOfMeasure`, `Cost`, `ListPrice`, `IsActive`).
-- **ProductCategory**: Supporting hierarchical categories.
-- **Warehouse**: Updated properties (`WarehouseName`, `Location`, `Capacity`).
-- **StockLevel**: (Renamed from Stock) Tracking quantity in specific warehouses with reorder and safety stock levels.
-- **StockTransaction**: Detailed movement logs with `TransactionType` and `Reference`.
-- **Supplier & ProductSupplier**: For managing external vendor relationships.
+---
 
-## 🚀 Getting Started
+## 🛠️ Tech Stack
 
-### Prerequisites
-- .NET 10 SDK
+**Backend:**
+- .NET 10 (Web API)
+- Entity Framework Core (MySQL)
+- SignalR (Real-time notifications)
+- StackExchange.Redis (Caching)
+- Moq & xUnit (Unit Testing)
+
+**Frontend:**
+- React 18 + Vite
+- Tailwind CSS (Styling)
+- Recharts (Data Visualization)
+- Lucide React (Icons)
+- Axios (API Communication)
+
+---
+
+## ⚙️ Getting Started
+
+### **Prerequisites**
+- .NET SDK (v8.0+)
+- Node.js (v18+)
 - MySQL Server
-- Redis (Optional)
+- Docker (for Redis)
 
-### Running the Project
-1. **Update Configuration**: Edit `src/Api/appsettings.json` with your MySQL connection string.
-2. **Apply Migrations**: (If starting fresh)
-   ```powershell
-   dotnet ef database update --project src/Infrastructure --startup-project src/Api
+### **Backend Setup**
+1. Navigate to the API directory:
+   ```bash
+   cd src/Api
    ```
-3. **Run the API**:
-   ```powershell
-   dotnet run --project src/Api
+2. Update the connection string in `appsettings.json`.
+3. Start the Redis container:
+   ```bash
+   docker-compose up -d redis
    ```
-4. **Swagger UI**: Access documentation at `http://localhost:5153/swagger`.
+4. Run migrations and start the server:
+   ```bash
+   dotnet run
+   ```
 
-## ✅ Final Verification
-- **Build Status**: 100% Successful on .NET 10.
-- **Schema Alignment**: All entities, repositories, and logic fully updated to match the provided structure.
+### **Frontend Setup**
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+---
+
+## 🧪 Testing
+The project includes a comprehensive suite of **23 unit tests** covering all core business logic.
+
+To run the tests:
+```powershell
+cd tests/InventoryManagement.Tests
+dotnet test
+```
+
+---
+
+## 👤 Author
+**Om Swami**
+- GitHub: [@OmSwami04](https://github.com/OmSwami04)
+- Repository: [Stock-Inventory-Management-System-P2](https://github.com/OmSwami04/Stock-Inventory-Management-System-P2)

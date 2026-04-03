@@ -23,6 +23,8 @@ public interface IStockService
     Task<IEnumerable<object>> GetAllStockAsync();
     Task<IEnumerable<object>> GetStockByProductAsync(Guid productId);
     Task<IEnumerable<object>> GetStockByWarehouseAsync(Guid warehouseId);
+    Task<IEnumerable<object>> GetStockTransactionsAsync();
+    Task TransferStockAsync(Guid productId, Guid fromWarehouseId, Guid toWarehouseId, int quantity, string referenceNumber);
 }
 
 public interface IInventoryService

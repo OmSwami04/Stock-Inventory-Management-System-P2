@@ -16,24 +16,33 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const [productsRes, valuationRes, stockRes] = await Promise.all([
+      const [productsRes, valuationRes, stockRes, warehousesRes] = await Promise.all([
         apiClient.get('/Products?pageSize=1000'),
         apiClient.get('/Inventory/valuation'),
-        apiClient.get('/Stock')
+        apiClient.get('/Stock'),
+        apiClient.get('/Warehouses')
       ]);
 
       const products = productsRes.data.items || [];
       const stockData = stockRes.data || [];
+      const warehouses = warehousesRes.data || [];
       
       const lowStock = stockData.filter(s => s.quantityOnHand <= s.reorderLevel).length;
 
-      // Calculate warehouse distribution
-      const distribution = stockData.reduce((acc, curr) => {
-        const warehouse = curr.warehouseName || 'Unknown';
-        if (!acc[warehouse]) acc[warehouse] = 0;
-        acc[warehouse] += curr.quantityOnHand;
+      // Initialize distribution with ALL warehouses set to 0
+      const distribution = warehouses.reduce((acc, w) => {
+        acc[w.warehouseName] = 0;
         return acc;
       }, {});
+
+      // Add actual stock levels
+      stockData.forEach(s => {
+        const warehouse = s.warehouseName || 'Unknown';
+        if (distribution[warehouse] === undefined) {
+           distribution[warehouse] = 0;
+        }
+        distribution[warehouse] += s.quantityOnHand;
+      });
 
       const formattedChartData = Object.keys(distribution).map(key => ({
         name: key,
@@ -105,7 +114,14 @@ const Dashboard = () => {
              <ResponsiveContainer width="100%" height="100%">
                <BarChart data={chartData}>
                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontWeight: 600, fontSize: 12}} dy={10} />
+                 <XAxis 
+                   dataKey="name" 
+                   axisLine={false} 
+                   tickLine={false} 
+                   tick={{fill: '#94a3b8', fontWeight: 600, fontSize: 12}} 
+                   dy={10} 
+                   interval={0}
+                 />
                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontWeight: 600, fontSize: 12}} />
                  <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}} />
                  <Bar dataKey="stock" radius={[6, 6, 0, 0]} barSize={40}>

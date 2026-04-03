@@ -15,7 +15,19 @@ public class StockTransactionRepository : GenericRepository<StockTransaction>, I
     {
         return await _dbSet
             .AsNoTracking()
+            .Include(st => st.Product)
+            .Include(st => st.Warehouse)
             .Where(st => st.ProductId == productId)
+            .OrderByDescending(st => st.TransactionDate)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<StockTransaction>> GetAllWithDetailsAsync()
+    {
+        return await _dbSet
+            .AsNoTracking()
+            .Include(st => st.Product)
+            .Include(st => st.Warehouse)
             .OrderByDescending(st => st.TransactionDate)
             .ToListAsync();
     }

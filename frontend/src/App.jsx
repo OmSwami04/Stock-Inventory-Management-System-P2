@@ -14,6 +14,7 @@ import RoleManagementPage from './pages/RoleManagementPage';
 import SupplierPage from './pages/SupplierPage';
 import WarehousePage from './pages/WarehousePage';
 import WarehouseDetailsPage from './pages/WarehouseDetailsPage';
+import TransactionHistoryPage from './pages/TransactionHistoryPage';
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
           <Route path="/warehouses" element={<WarehousePage />} />
           <Route path="/warehouses/:id" element={<WarehouseDetailsPage />} />
           <Route path="/stock-movement" element={<StockMovement />} />
+          <Route path="/transactions" element={<TransactionHistoryPage />} />
           <Route path="/alerts" element={<AlertsPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/roles" element={<RoleManagementPage />} />

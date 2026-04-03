@@ -148,4 +148,89 @@ public class StockService : IStockService
         var stock = await _stockLevelRepository.GetByWarehouseIdAsync(warehouseId);
         return _mapper.Map<IEnumerable<StockLevelDto>>(stock);
     }
+
+    public async Task<IEnumerable<object>> GetStockTransactionsAsync()
+    {
+        var transactions = await _transactionRepository.GetAllWithDetailsAsync();
+        return _mapper.Map<IEnumerable<StockTransactionDto>>(transactions);
+    }
+
+    public async Task TransferStockAsync(Guid productId, Guid fromWarehouseId, Guid toWarehouseId, int quantity, string referenceNumber)
+    {
+        if (fromWarehouseId == toWarehouseId)
+            throw new InvalidOperationException("Source and destination warehouses cannot be the same.");
+
+        if (quantity <= 0)
+            throw new InvalidOperationException("Transfer quantity must be greater than zero.");
+
+        // 1. Check source stock
+        var sourceStock = await _stockLevelRepository.GetByProductAndWarehouseAsync(productId, fromWarehouseId);
+        if (sourceStock == null || sourceStock.QuantityOnHand < quantity)
+            throw new InvalidOperationException("Insufficient stock in the source warehouse.");
+
+        // 2. Decrease source stock
+        sourceStock.QuantityOnHand -= quantity;
+        _stockLevelRepository.Update(sourceStock);
+
+        // 3. Increase destination stock
+        var destinationStock = await _stockLevelRepository.GetByProductAndWarehouseAsync(productId, toWarehouseId);
+        if (destinationStock == null)
+        {
+            destinationStock = new StockLevel
+            {
+                StockLevelId = Guid.NewGuid(),
+                ProductId = productId,
+                WarehouseId = toWarehouseId,
+                QuantityOnHand = quantity,
+                ReorderLevel = sourceStock.ReorderLevel, // Inherit reorder level
+                SafetyStock = sourceStock.SafetyStock   // Inherit safety stock
+            };
+            await _stockLevelRepository.AddAsync(destinationStock);
+        }
+        else
+        {
+            destinationStock.QuantityOnHand += quantity;
+            _stockLevelRepository.Update(destinationStock);
+        }
+
+        // 4. Record transactions
+        var outTransaction = new StockTransaction
+        {
+            TransactionId = Guid.NewGuid(),
+            ProductId = productId,
+            WarehouseId = fromWarehouseId,
+            TransactionType = "Transfer Out",
+            Quantity = -quantity,
+            TransactionDate = DateTime.UtcNow,
+            Reference = referenceNumber
+        };
+
+        var inTransaction = new StockTransaction
+        {
+            TransactionId = Guid.NewGuid(),
+            ProductId = productId,
+            WarehouseId = toWarehouseId,
+            TransactionType = "Transfer In",
+            Quantity = quantity,
+            TransactionDate = DateTime.UtcNow,
+            Reference = referenceNumber
+        };
+
+        await _transactionRepository.AddAsync(outTransaction);
+        await _transactionRepository.AddAsync(inTransaction);
+
+        await _stockLevelRepository.SaveChangesAsync();
+        await _transactionRepository.SaveChangesAsync();
+
+        // Notify real-time update
+        var product = await _unitOfWork.Repository<Product>().GetByIdAsync(productId);
+        if (product != null)
+        {
+            var sourceStockLevel = sourceStock.QuantityOnHand;
+            var destStockLevel = destinationStock.QuantityOnHand;
+            
+            await _notificationService.NotifyStockUpdateAsync(productId, product.ProductName, sourceStockLevel, product.ReorderLevel);
+            await _notificationService.NotifyStockUpdateAsync(productId, product.ProductName, destStockLevel, product.ReorderLevel);
+        }
+    }
 }

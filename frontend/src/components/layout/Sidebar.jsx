@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Box, ArrowLeftRight, Bell, LogOut, Package, Truck, Warehouse } from 'lucide-react';
+import { LayoutDashboard, Box, ArrowLeftRight, Bell, LogOut, Package, Truck, Warehouse, History } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const Sidebar = () => {
@@ -12,6 +12,7 @@ const Sidebar = () => {
     { name: 'Suppliers', path: '/suppliers', icon: <Truck size={20} />, roles: ['Admin', 'InventoryManager'] },
     { name: 'Warehouses', path: '/warehouses', icon: <Warehouse size={20} />, roles: ['Admin', 'InventoryManager', 'InventoryClerk'] },
     { name: 'Stock Movement', path: '/stock-movement', icon: <ArrowLeftRight size={20} />, roles: ['Admin', 'InventoryManager', 'InventoryClerk'] },
+    { name: 'Transactions', path: '/transactions', icon: <History size={20} />, roles: ['Admin', 'InventoryManager', 'InventoryClerk'] },
     { name: 'Alerts', path: '/alerts', icon: <Bell size={20} />, roles: ['Admin', 'InventoryManager', 'InventoryClerk'] },
   ];
 

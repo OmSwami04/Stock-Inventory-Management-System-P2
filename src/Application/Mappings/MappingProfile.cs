@@ -20,5 +20,9 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.WarehouseName, opt => opt.MapFrom(src => src.Warehouse != null ? src.Warehouse.WarehouseName : string.Empty))
             .ForMember(dest => dest.ReorderLevel, opt => opt.MapFrom(src => src.Product != null ? src.Product.ReorderLevel : 0))
             .ForMember(dest => dest.SafetyStock, opt => opt.MapFrom(src => src.Product != null ? src.Product.SafetyStock : 0));
+
+        CreateMap<StockTransaction, StockTransactionDto>()
+            .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product != null ? src.Product.ProductName : "Unknown"))
+            .ForMember(dest => dest.WarehouseName, opt => opt.MapFrom(src => src.Warehouse != null ? src.Warehouse.WarehouseName : "Unknown"));
     }
 }

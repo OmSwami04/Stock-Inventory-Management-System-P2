@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using InventoryManagement.Application.Features.Stock.Commands;
+using InventoryManagement.Application.Features.Stock.DTOs;
 using InventoryManagement.Shared.Constants;
 using InventoryManagement.Interfaces.Services;
 
@@ -40,6 +41,34 @@ public class StockController : ControllerBase
     {
         var result = await _stockService.GetStockByWarehouseAsync(warehouseId);
         return Ok(result);
+    }
+
+    [HttpGet("transactions")]
+    [Authorize(Roles = $"{Roles.InventoryClerk},{Roles.InventoryManager},{Roles.Admin}")]
+    public async Task<IActionResult> GetTransactions()
+    {
+        var result = await _stockService.GetStockTransactionsAsync();
+        return Ok(result);
+    }
+
+    [HttpPost("transfer")]
+    [Authorize(Roles = $"{Roles.InventoryClerk},{Roles.InventoryManager},{Roles.Admin}")]
+    public async Task<IActionResult> TransferStock([FromBody] StockTransferRequest request)
+    {
+        try
+        {
+            await _stockService.TransferStockAsync(
+                request.ProductId,
+                request.FromWarehouseId,
+                request.ToWarehouseId,
+                request.Quantity,
+                request.ReferenceNumber);
+            return Ok(new { message = "Stock transferred successfully" });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPost("transaction")]
